@@ -32,8 +32,10 @@ def make_dataset(mode):
             item = (os.path.join(img_path, it + '.jpg'), os.path.join(mask_path, it + '.png'))
             items.append(item)
     elif mode == 'val':
+        pass
         #TODO
     else:
+        pass
         # TODO FOR TEST SET
     return items
 
