@@ -24,8 +24,8 @@ def iou(pred, target, n_classes:int=21) -> float:
     pred[pred == 255] = 0  # TODO will our model even output object boundary pixels? this may be unnecessary
     target[pred == 255] = 0
     # num pixels is equal to num entries in target and/or pred
-    total = target.size
-    class_iou = np.array(n_classes)
+    total = target.size().numel()
+    class_iou = np.zeros(n_classes)
     for k in range(n_classes):
         # given the set of pixels in pred and target
         # labeled k, we want to calculate the size of
@@ -41,7 +41,7 @@ def iou(pred, target, n_classes:int=21) -> float:
         intersect = total - np.count_nonzero(normalized_target | normalized_pred)
         # basic combinatorics, size of two sets is equal
         # to size A + size B - intersection
-        union = labeled_target + labeled_pred - intersect
+        union = 1 + labeled_target + labeled_pred - intersect
         class_iou[k] = intersect / union
     return np.average(class_iou)
 
@@ -61,7 +61,7 @@ def pixel_acc(pred, target) -> float:
     pred[pred == 255] = 0 # TODO will our model even output object boundary pixels? this may be unnecessary
     target[pred == 255] = 0
     # num pixels is equal to num entries in target and/or pred
-    total = target.size
+    total = target.size().numel()
     # calc number of true positive predictions
     # subtract pred from target, if 2 pixels have same
     # class label, then difference pixel will be 0. Otherwise

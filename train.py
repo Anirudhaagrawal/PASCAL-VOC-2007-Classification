@@ -20,11 +20,12 @@ def init_weights(m):
 
 
 
+
 #TODO Get class weights
 def getClassWeights():
-
     raise NotImplementedError
 
+BATCH_SIZE = 16
 
 mean_std = ([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 input_transform = standard_transforms.Compose([
@@ -38,11 +39,11 @@ train_dataset =voc.VOC('train', transform=input_transform, target_transform=targ
 val_dataset = voc.VOC('val', transform=input_transform, target_transform=target_transform)
 test_dataset = voc.VOC('test', transform=input_transform, target_transform=target_transform)
 
-train_loader = DataLoader(dataset=train_dataset, batch_size= 16, shuffle=True)
-val_loader = DataLoader(dataset=val_dataset, batch_size= 16, shuffle=False)
-test_loader = DataLoader(dataset=test_dataset, batch_size= 16, shuffle=False)
+train_loader = DataLoader(dataset=train_dataset, batch_size= BATCH_SIZE, shuffle=True)
+val_loader = DataLoader(dataset=val_dataset, batch_size= BATCH_SIZE, shuffle=False)
+test_loader = DataLoader(dataset=test_dataset, batch_size= BATCH_SIZE, shuffle=False)
 
-epochs =20
+epochs =10
 
 n_class = 21
 
@@ -50,6 +51,7 @@ fcn_model = FCN(n_class=n_class)
 fcn_model.apply(init_weights)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu' # TODO determine which device to use (cuda or cpu)
+# device = 'mps' if torch.backends.mps.is_available() else 'cpu' # TODO determine which device to use (cuda or cpu)
 
 optimizer = torch.optim.SGD(fcn_model.parameters(), lr=0.01, momentum=0.9) # TODO choose an optimizer
 criterion = nn.CrossEntropyLoss() # TODO Choose an appropriate loss function from https://pytorch.org/docs/stable/_modules/torch/nn/modules/loss.html
@@ -98,13 +100,13 @@ def val(epoch):
     with torch.no_grad(): # we don't need to calculate the gradient in the validation/testing
 
         for iter, (input, label) in enumerate(val_loader):
-            #TODO
-            pass
-            # output= fcn_model.forward(input)
-            # loss = criterion(output, label)
-            # losses.append(loss.item())
-            # mean_iou_scores.append(util.iou(output, label))
-            # accuracy.append(util.pixel_acc(output, label))
+            output= fcn_model.forward(input)
+            loss = criterion(output, label)
+            losses.append(loss.item())
+
+            pred= torch.argmax(output, 1)
+            mean_iou_scores.append(util.iou(pred, label))
+            accuracy.append(util.pixel_acc(pred, label))
 
 
 
@@ -139,6 +141,7 @@ if __name__ == "__main__":
 
     val(0)  # show the accuracy before training
     train()
+
     modelTest()
 
     # housekeeping
