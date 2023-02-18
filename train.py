@@ -26,11 +26,25 @@ def getClassWeights():
     raise NotImplementedError
 
 BATCH_SIZE = 16
+TRANSFORM_PROBABILLITY = 1
 
 mean_std = ([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 input_transform = standard_transforms.Compose([
         standard_transforms.ToTensor(),
-        standard_transforms.Normalize(*mean_std)
+        standard_transforms.Normalize(*mean_std),
+
+        standard_transforms.RandomChoice([
+        standard_transforms.RandomVerticalFlip(p=1),
+        standard_transforms.RandomRotation(degrees=45),
+        standard_transforms.RandomHorizontalFlip(p=1),
+        standard_transforms.RandomCrop(size=(224,224)),], p=[TRANSFORM_PROBABILLITY for i in range(4)]),
+
+        standard_transforms.RandomChoice([
+        standard_transforms.RandomVerticalFlip(),
+        standard_transforms.RandomRotation(degrees=45),
+        standard_transforms.RandomHorizontalFlip(),
+        standard_transforms.RandomCrop(size=(224,224))], p=[TRANSFORM_PROBABILLITY for i in range(4)])
+
     ])
 
 target_transform = MaskToTensor()
