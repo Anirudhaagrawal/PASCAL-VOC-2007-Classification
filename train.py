@@ -50,10 +50,11 @@ n_class = 21
 fcn_model = FCN(n_class=n_class)
 fcn_model.apply(init_weights)
 
-# device = 'cuda' if torch.cuda.is_available() else 'cpu' # TODO determine which device to use (cuda or cpu)
-device = 'mps' if torch.backends.mps.is_available() else 'cpu' # TODO determine which device to use (cuda or cpu)
+device = 'cuda' if torch.cuda.is_available() else 'cpu' # TODO determine which device to use (cuda or cpu)
+# device = 'mps' if torch.backends.mps.is_available() else 'cpu' # TODO determine which device to use (cuda or cpu)
 
-optimizer = torch.optim.SGD(fcn_model.parameters(), lr=0.01, momentum=0.9) # TODO choose an optimizer
+# optimizer = torch.optim.SGD(fcn_model.parameters(), lr=0.01, momentum=0.9)
+optimizer = torch.optim.Adam(fcn_model.parameters(), lr=0.01)
 criterion = nn.CrossEntropyLoss() # TODO Choose an appropriate loss function from https://pytorch.org/docs/stable/_modules/torch/nn/modules/loss.html
 
 fcn_model = fcn_model.to(device=device) # TODO transfer the model to the device
