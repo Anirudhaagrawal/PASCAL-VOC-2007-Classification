@@ -1,10 +1,13 @@
 import os
+
+import torch
 from PIL import Image
 from torch.utils import data
+import torchvision
 
 num_classes = 21
 ignore_label = 255
-root = './data'
+root = os.getcwd()
 
 '''
 color map
@@ -24,26 +27,26 @@ def make_dataset(mode):
     assert mode in ['train', 'val', 'test']
     items = []
     if mode == 'train':
-        img_path = os.path.join(root, 'VOCdevkit', 'VOC2007', 'JPEGImages')
-        mask_path = os.path.join(root, 'VOCdevkit', 'VOC2007', 'SegmentationClass')
+        img_path = os.path.join(root, 'data/VOCdevkit', 'VOC2007', 'JPEGImages')
+        mask_path = os.path.join(root, 'data/VOCdevkit', 'VOC2007', 'SegmentationClass')
         data_list = [l.strip('\n') for l in open(os.path.join(
-            root, 'VOCdevkit', 'VOC2007', 'ImageSets', 'Segmentation', 'train.txt')).readlines()]
+            root, 'data/VOCdevkit', 'VOC2007', 'ImageSets', 'Segmentation', 'train.txt')).readlines()]
         for it in data_list:
             item = (os.path.join(img_path, it + '.jpg'), os.path.join(mask_path, it + '.png'))
             items.append(item)
     elif mode == 'val':
-        img_path = os.path.join(root, 'VOCdevkit', 'VOC2007', 'JPEGImages')
-        mask_path = os.path.join(root, 'VOCdevkit', 'VOC2007', 'SegmentationClass')
+        img_path = os.path.join(root, 'data/VOCdevkit', 'VOC2007', 'JPEGImages')
+        mask_path = os.path.join(root, 'data/VOCdevkit', 'VOC2007', 'SegmentationClass')
         data_list = [l.strip('\n') for l in open(os.path.join(
-            root, 'VOCdevkit', 'VOC2007', 'ImageSets', 'Segmentation', 'val.txt')).readlines()]
+            root, 'data/VOCdevkit', 'VOC2007', 'ImageSets', 'Segmentation', 'val.txt')).readlines()]
         for it in data_list:
             item = (os.path.join(img_path, it + '.jpg'), os.path.join(mask_path, it + '.png'))
             items.append(item)
     else:
-        img_path = os.path.join(root, 'VOCdevkit', 'VOC2007', 'JPEGImages')
-        mask_path = os.path.join(root, 'VOCdevkit', 'VOC2007', 'SegmentationClass')
+        img_path = os.path.join(root, 'data/VOCdevkit', 'VOC2007', 'JPEGImages')
+        mask_path = os.path.join(root, 'data/VOCdevkit', 'VOC2007', 'SegmentationClass')
         data_list = [l.strip('\n') for l in open(os.path.join(
-            root, 'VOCdevkit', 'VOC2007', 'ImageSets', 'Segmentation', 'test.txt')).readlines()]
+            root, 'data/VOCdevkit', 'VOC2007', 'ImageSets', 'Segmentation', 'test.txt')).readlines()]
         for it in data_list:
             item = (os.path.join(img_path, it + '.jpg'), os.path.join(mask_path, it + '.png'))
             items.append(item)
@@ -51,7 +54,7 @@ def make_dataset(mode):
 
 
 class VOC(data.Dataset):
-    def __init__(self, mode, transform=None, target_transform=None):
+    def __init__(self, mode, transform=torchvision.transforms.ToTensor(), target_transform=torchvision.transforms.ToTensor()):
         self.imgs = make_dataset(mode)
         if len(self.imgs) == 0:
             raise RuntimeError('Found 0 images, please check the data set')

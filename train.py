@@ -49,12 +49,12 @@ n_class = 21
 fcn_model = FCN(n_class=n_class)
 fcn_model.apply(init_weights)
 
-device =   # TODO determine which device to use (cuda or cpu)
+device = 'cuda' if torch.cuda.is_available() else 'cpu' # TODO determine which device to use (cuda or cpu)
 
-optimizer = # TODO choose an optimizer
-criterion =  # TODO Choose an appropriate loss function from https://pytorch.org/docs/stable/_modules/torch/nn/modules/loss.html
+optimizer = torch.optim.SGD(fcn_model.parameters(), lr=0.01, momentum=0.9) # TODO choose an optimizer
+criterion = nn.CrossEntropyLoss() # TODO Choose an appropriate loss function from https://pytorch.org/docs/stable/_modules/torch/nn/modules/loss.html
 
-fcn_model =  # TODO transfer the model to the device
+fcn_model = fcn_model.to(device=device) # TODO transfer the model to the device
 
 
 # TODO
@@ -64,20 +64,16 @@ def train():
     for epoch in range(epochs):
         ts = time.time()
         for iter, (inputs, labels) in enumerate(train_loader):
-            # TODO  reset optimizer gradients
+            optimizer.zero_grad()
 
+            inputs = inputs.to(device)
+            labels = labels.to(device)
 
-            # both inputs and labels have to reside in the same device as the model's
-            inputs =  inputs.to()# TODO transfer the input to the same device as the model's
-            labels =   # TODO transfer the labels to the same device as the model's
+            outputs = fcn_model.forward(inputs)
 
-            outputs =  # TODO  Compute outputs. we will not need to transfer the output, it will be automatically in the same device as the model's!
-
-            loss =   #TODO  calculate loss
-
-            # TODO  backpropagate
-
-            # TODO  update the weights
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
 
 
             if iter % 10 == 0:
@@ -102,6 +98,13 @@ def val(epoch):
     with torch.no_grad(): # we don't need to calculate the gradient in the validation/testing
 
         for iter, (input, label) in enumerate(val_loader):
+            #TODO
+            pass
+            # output= fcn_model.forward(input)
+            # loss = criterion(output, label)
+            # losses.append(loss.item())
+            # mean_iou_scores.append(util.iou(output, label))
+            # accuracy.append(util.pixel_acc(output, label))
 
 
 
@@ -123,6 +126,8 @@ def modelTest():
     with torch.no_grad():  # we don't need to calculate the gradient in the validation/testing
 
         for iter, (input, label) in enumerate(test_loader):
+            #TODO
+            pass
 
 
 
