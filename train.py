@@ -22,8 +22,14 @@ def init_weights(m):
 
 
 #TODO Get class weights
-def getClassWeights():
-    raise NotImplementedError
+def getClassWeights(labels):
+    weights = dict(zip(np.unique(labels.cpu().numpy(), return_counts=True)[0],
+             np.unique(labels.cpu().numpy(), return_counts=True)[1]))
+    total = sum(weights.values())
+    res = {}
+    for i in range(21):
+        res[i] = 1 - weights.get(i,0) / total
+    return list(res.values())
 
 BATCH_SIZE = 16
 TRANSFORM_PROBABILLITY = 1
@@ -81,7 +87,11 @@ def train():
     for epoch in range(epochs):
         ts = time.time()
         for iter, (inputs, labels) in enumerate(train_loader):
+            weights = getClassWeights(labels)
             optimizer.zero_grad()
+            class_weights = torch.FloatTensor(weights).to(device)
+
+            criterion = nn.CrossEntropyLoss(weight=class_weights)
 
             inputs = inputs.to(device)
             labels = labels.to(device)
