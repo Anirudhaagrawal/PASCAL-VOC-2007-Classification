@@ -7,6 +7,7 @@ import voc
 import torchvision.transforms as standard_transforms
 import util
 import numpy as np
+import torch.backends.mps as backends
 
 class MaskToTensor(object):
     def __call__(self, img):
@@ -33,6 +34,10 @@ def getClassWeights(labels):
 
 BATCH_SIZE = 16
 TRANSFORM_PROBABILLITY = 1
+
+epochs =10
+
+n_class = 21
 
 mean_std = ([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 input_transform = standard_transforms.Compose([
@@ -63,19 +68,22 @@ train_loader = DataLoader(dataset=train_dataset, batch_size= BATCH_SIZE, shuffle
 val_loader = DataLoader(dataset=val_dataset, batch_size= BATCH_SIZE, shuffle=False)
 test_loader = DataLoader(dataset=test_dataset, batch_size= BATCH_SIZE, shuffle=False)
 
-epochs =10
 
-n_class = 21
 
 fcn_model = FCN(n_class=n_class)
 fcn_model.apply(init_weights)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu' # TODO determine which device to use (cuda or cpu)
-# device = 'mps' if torch.backends.mps.is_available() else 'cpu' # TODO determine which device to use (cuda or cpu)
+# device = 'mps' if backends.is_available() else 'cpu' # TODO determine which device to use (cuda or cpu)
+
+device = torch.device(device)
 
 # optimizer = torch.optim.SGD(fcn_model.parameters(), lr=0.01, momentum=0.9)
 optimizer = torch.optim.Adam(fcn_model.parameters(), lr=0.01)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, len(train_loader))
+
 criterion = nn.CrossEntropyLoss() # TODO Choose an appropriate loss function from https://pytorch.org/docs/stable/_modules/torch/nn/modules/loss.html
+
 
 fcn_model = fcn_model.to(device=device) # TODO transfer the model to the device
 
@@ -84,8 +92,10 @@ fcn_model = fcn_model.to(device=device) # TODO transfer the model to the device
 def train():
     best_iou_score = 0.0
 
+
     for epoch in range(epochs):
         ts = time.time()
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, len(train_loader))
         for iter, (inputs, labels) in enumerate(train_loader):
             weights = getClassWeights(labels)
             optimizer.zero_grad()
@@ -101,6 +111,7 @@ def train():
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
+            scheduler.step()
 
 
             if iter % 10 == 0:
@@ -109,6 +120,7 @@ def train():
         print("Finish epoch {}, time elapsed {}".format(epoch, time.time() - ts))
 
         current_miou_score = val(epoch)
+
 
         if current_miou_score > best_iou_score:
             best_iou_score = current_miou_score
