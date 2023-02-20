@@ -21,29 +21,21 @@ def iou(pred, target, n_classes:int=21) -> float:
     """
     # pre-process pred and target, some entries will have value 255,
     # denoting object boundaries. set to 0, denoting background class
-    pred[pred == 255] = 0  # TODO will our model even output object boundary pixels? this may be unnecessary
-    target[pred == 255] = 0
-    # num pixels is equal to num entries in target and/or pred
-    total = target.size().numel()
-    class_iou = np.zeros(n_classes)
+    pred[pred == 255] = 0
+    target[target == 255] = 0
+    # init empty array to hold IoU for each class
+    iou = np.zeros(n_classes)
+    # iterate through each class
     for k in range(n_classes):
-        # given the set of pixels in pred and target
-        # labeled k, we want to calculate the size of
-        # their intersection and union.
-        normalized_pred = pred - k
-        normalized_target = target - k
-        labeled_pred = total - np.count_nonzero(normalized_pred)
-        labeled_target = total - np.count_nonzero(normalized_target)
-        # intersection is number of pixels that are
-        # both labeled 0 in normalized
-        # logical or, true when either is non zero, false when both are zero
-        # count nonzero counts trues
-        intersect = total - np.count_nonzero(normalized_target | normalized_pred)
-        # basic combinatorics, size of two sets is equal
-        # to size A + size B - intersection
-        union = 1 + labeled_target + labeled_pred - intersect
-        class_iou[k] = intersect / union
-    return np.average(class_iou)
+        # calc the union of the pixels in pred and target labeled class k
+        union = np.count_nonzero(np.logical_or(pred == k, target == k))
+        union=union+1e-10
+        # calc the intersection of the pixels in pred and target labeled class k
+        intersect = np.count_nonzero(np.logical_and(pred == k, target == k))
+        # calc the IoU for class k
+        iou[k] = intersect / union
+    # return the mean IoU of the pattern
+    return np.average(iou)
 
 
 def pixel_acc(pred, target) -> float:
@@ -58,15 +50,11 @@ def pixel_acc(pred, target) -> float:
     """
     # pre-process pred and target, some entries will have value 255,
     # denoting object boundaries. set to 0, denoting background class
-    pred[pred == 255] = 0 # TODO will our model even output object boundary pixels? this may be unnecessary
-    target[pred == 255] = 0
-    # num pixels is equal to num entries in target and/or pred
-    total = target.size().numel()
-    # calc number of true positive predictions
-    # subtract pred from target, if 2 pixels have same
-    # class label, then difference pixel will be 0. Otherwise
-    # difference will be nonzero.
-    diff = pred - target
-    # count zeros in diff to get number of true positives
-    num_correct = total - np.count_nonzero(diff)
-    return num_correct / total
+    pred[pred == 255] = 0
+    target[target == 255] = 0
+    # calc the number of pixels in the pattern
+    n_pixels = np.prod(pred.shape)
+    # calc the number of pixels with correct predictions
+    correct_pixels = np.count_nonzero(pred == target)
+    # calc and return the pixel accuracy
+    return correct_pixels / n_pixels

@@ -21,19 +21,8 @@ def init_weights(m):
 
 
 
-
-#TODO Get class weights
-def getClassWeights(labels):
-    weights = dict(zip(np.unique(labels.cpu().numpy(), return_counts=True)[0],
-             np.unique(labels.cpu().numpy(), return_counts=True)[1]))
-    total = sum(weights.values())
-    res = {}
-    for i in range(21):
-        res[i] = 1 - weights.get(i,0) / total
-    return list(res.values())
-
 BATCH_SIZE = 16
-TRANSFORM_PROBABILLITY = 1
+TRANSFORM_PROBABILLITY = 0.1
 
 epochs =10
 
@@ -42,22 +31,8 @@ n_class = 21
 mean_std = ([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 input_transform = standard_transforms.Compose([
         standard_transforms.ToTensor(),
-        standard_transforms.Normalize(*mean_std),
-
-        standard_transforms.RandomChoice([
-        standard_transforms.RandomVerticalFlip(p=1),
-        standard_transforms.RandomRotation(degrees=45),
-        standard_transforms.RandomHorizontalFlip(p=1),
-        standard_transforms.RandomCrop(size=(224,224)),], p=[TRANSFORM_PROBABILLITY for i in range(4)]),
-
-        standard_transforms.RandomChoice([
-        standard_transforms.RandomVerticalFlip(),
-        standard_transforms.RandomRotation(degrees=45),
-        standard_transforms.RandomHorizontalFlip(),
-        standard_transforms.RandomCrop(size=(224,224))], p=[TRANSFORM_PROBABILLITY for i in range(4)])
-
+        standard_transforms.Normalize(*mean_std)
     ])
-
 target_transform = MaskToTensor()
 
 train_dataset =voc.VOC('train', transform=input_transform, target_transform=target_transform)
@@ -74,7 +49,6 @@ fcn_model = FCN(n_class=n_class)
 fcn_model.apply(init_weights)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu' # TODO determine which device to use (cuda or cpu)
-# device = 'mps' if backends.is_available() else 'cpu' # TODO determine which device to use (cuda or cpu)
 
 device = torch.device(device)
 
@@ -92,22 +66,19 @@ fcn_model = fcn_model.to(device=device) # TODO transfer the model to the device
 def train():
     best_iou_score = 0.0
 
-
+#    weights = train_dataset.get_class_weights()
     for epoch in range(epochs):
         ts = time.time()
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, len(train_loader))
         for iter, (inputs, labels) in enumerate(train_loader):
-            weights = getClassWeights(labels)
             optimizer.zero_grad()
-            class_weights = torch.FloatTensor(weights).to(device)
+#            class_weights = torch.FloatTensor(weights).to(device)
 
-            criterion = nn.CrossEntropyLoss(weight=class_weights)
+            criterion = nn.CrossEntropyLoss()
 
             inputs = inputs.to(device)
             labels = labels.to(device)
 
             outputs = fcn_model.forward(inputs)
-
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()

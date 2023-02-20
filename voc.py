@@ -81,3 +81,12 @@ class VOC(data.Dataset):
 
     def __len__(self):
         return len(self.imgs)
+
+    def get_class_weights(self):
+        class_count = torch.zeros(21)
+        for i in range(len(self.imgs)):
+            _, mask = self.__getitem__(i)
+            for j in range(21):
+                class_count[j] += torch.sum(mask==j)
+        class_weights = 1./class_count
+        return class_weights
