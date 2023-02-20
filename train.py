@@ -55,9 +55,10 @@ device = torch.device(device)
 # optimizer = torch.optim.SGD(fcn_model.parameters(), lr=0.01, momentum=0.9)
 optimizer = torch.optim.Adam(fcn_model.parameters(), lr=0.01)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, len(train_loader))
-
-criterion = nn.CrossEntropyLoss() # TODO Choose an appropriate loss function from https://pytorch.org/docs/stable/_modules/torch/nn/modules/loss.html
-
+weights = train_dataset.get_class_weights()
+class_weights = torch.FloatTensor(weights)
+criterion = nn.CrossEntropyLoss(weight=class_weights) # TODO Choose an appropriate loss function from https://pytorch.org/docs/stable/_modules/torch/nn/modules/loss.html
+class_weights = class_weights.to(device)
 
 fcn_model = fcn_model.to(device=device) # TODO transfer the model to the device
 
@@ -65,15 +66,11 @@ fcn_model = fcn_model.to(device=device) # TODO transfer the model to the device
 # TODO
 def train():
     best_iou_score = 0.0
-
-#    weights = train_dataset.get_class_weights()
     for epoch in range(epochs):
         ts = time.time()
         for iter, (inputs, labels) in enumerate(train_loader):
             optimizer.zero_grad()
-#            class_weights = torch.FloatTensor(weights).to(device)
-
-            criterion = nn.CrossEntropyLoss()
+            criterion = nn.CrossEntropyLoss(weight=class_weights)
 
             inputs = inputs.to(device)
             labels = labels.to(device)
