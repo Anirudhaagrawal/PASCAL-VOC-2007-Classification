@@ -1,3 +1,4 @@
+import yaml
 from tqdm import tqdm
 
 import os
@@ -32,13 +33,23 @@ def init_weights_transfer_learning(m):
         torch.nn.init.xavier_uniform_(m.weight.data)
         torch.nn.init.normal_(m.bias.data)  # xavier not applicable for biases
 
-
-BATCH_SIZE = 16
-TRANSFORM_PROBABILLITY = 0.1
 U_NET = False
 Fcn = False
 RESNET = True
-epochs = 30
+
+config = yaml.load(open('config.yml', 'r'), Loader=yaml.SafeLoader)
+
+cosine_annealing = config['cosine_annealing']
+random_transforms = config['random_transforms']
+use_class_weights = config['class_imbalance_fix']
+epochs = config['epochs']
+batch_size = config['batch_size']
+
+print(f'cosine annealing:\t{cosine_annealing}')
+print(f'random transforms:\t{random_transforms}')
+print(f'use class weights:\t{use_class_weights}')
+print(f'epochs:\t\t\t\t{epochs}')
+print(f'batch size:\t\t\t{batch_size}')
 
 n_class = 21
 
@@ -54,9 +65,9 @@ train_dataset = voc.VOC('train', transform=input_transform, target_transform=tar
 val_dataset = voc.VOC('val', transform=input_transform, target_transform=target_transform)
 test_dataset = voc.VOC('test', transform=input_transform, target_transform=target_transform)
 
-train_loader = DataLoader(dataset=train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-val_loader = DataLoader(dataset=val_dataset, batch_size=BATCH_SIZE, shuffle=False)
-test_loader = DataLoader(dataset=test_dataset, batch_size=BATCH_SIZE, shuffle=False)
+train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
+val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=False)
+test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
 if U_NET:
     fcn_model = UNet(n_class=n_class)
     fcn_model.apply(init_weights)
@@ -74,10 +85,13 @@ device = torch.device(device)
 optimizer = torch.optim.Adam(fcn_model.parameters(), lr=0.001)
 scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=2, T_mult=1)
 weights = train_dataset.get_class_weights()
-class_weights = torch.FloatTensor(weights)
-criterion = nn.CrossEntropyLoss(
-    weight=class_weights)  # TODO Choose an appropriate loss function from https://pytorch.org/docs/stable/_modules/torch/nn/modules/loss.html
-class_weights = class_weights.to(device)
+if use_class_weights:
+    class_weights = torch.FloatTensor(weights)
+    criterion = nn.CrossEntropyLoss(
+        weight=class_weights)
+    class_weights = class_weights.to(device)
+else:
+    criterion = nn.CrossEntropyLoss()
 
 fcn_model = fcn_model.to(device=device)  # TODO transfer the model to the device
 
@@ -116,8 +130,12 @@ def train(save_location):
         iters = len(train_loader)
         train_losses = []
         for iter, (inputs, labels) in enumerate(train_loader):
-            optimizer.zero_grad()
-            criterion = nn.CrossEntropyLoss(weight=class_weights)
+            if cosine_annealing:
+                optimizer.zero_grad()
+            if use_class_weights:
+                criterion = nn.CrossEntropyLoss(weight=class_weights)
+            else:
+                criterion = nn.CrossEntropyLoss()
 
             inputs = inputs.to(device)
             labels = labels.to(device)
@@ -128,8 +146,9 @@ def train(save_location):
             train_losses.append(loss.item())
 
             loss.backward()
-            optimizer.step()
-            scheduler.step(epoch + iter / iters)
+            if cosine_annealing:
+                optimizer.step()
+                scheduler.step(epoch + iter / iters)
 
             inner_pbar.update(train_loader.batch_size)
         train_loss[epoch] = np.mean(train_losses)
@@ -155,7 +174,7 @@ def train(save_location):
             print(f'Patience threshold reached ({early_stop_patience} epochs).')
             print(f'Early stopping after completing epoch {epoch + 1}.')
             break
-        
+
         training_pbar.update(1)
     training_pbar.close()
     util.plots(train_loss, val_loss, val_accuracy, mean_iou_scores, earlyStop, saveLocation = save_location)
