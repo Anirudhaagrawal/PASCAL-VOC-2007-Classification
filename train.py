@@ -34,7 +34,7 @@ def init_weights_transfer_learning(m):
         torch.nn.init.xavier_uniform_(m.weight.data)
         torch.nn.init.normal_(m.bias.data)  # xavier not applicable for biases
 
-config = yaml.load(open('config.yml', 'r'), Loader=yaml.SafeLoader)
+config = yaml.load(open('config3.yml', 'r'), Loader=yaml.SafeLoader)
 
 cosine_annealing = config['cosine_annealing']
 random_transforms = config['random_transforms']
@@ -237,7 +237,7 @@ if __name__ == "__main__":
     path = 'Results'
     if not os.path.exists(path):
       os.mkdir(path)
-    save_location = path+model_identifier
+    save_location = path+'/' + model_identifier
     val(0)  # show the accuracy before training
     train(save_location)
     modelTest(save_location)
