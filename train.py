@@ -15,6 +15,7 @@ import numpy as np
 import torch.backends.mps as backends
 from resnet import *
 from unet import *
+from new_arch import *
 
 
 class MaskToTensor(object):
@@ -41,6 +42,7 @@ use_class_weights = config['class_imbalance_fix']
 epochs = config['epochs']
 batch_size = config['batch_size']
 model_type = config['model_type']
+model_identifier = config['model_identifier']
 
 print(f'cosine annealing:\t{cosine_annealing}')
 print(f'random transforms:\t{random_transforms}')
@@ -235,7 +237,7 @@ if __name__ == "__main__":
     path = 'Results'
     if not os.path.exists(path):
       os.mkdir(path)
-    save_location = path+"/model3a"
+    save_location = path+model_identifier
     val(0)  # show the accuracy before training
     train(save_location)
     modelTest(save_location)
