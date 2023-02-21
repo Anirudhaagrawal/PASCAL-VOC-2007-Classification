@@ -84,7 +84,7 @@ def plots(trainEpochLoss, valEpochLoss, valEpochAccuracy, valIoU, earlyStop, typ
     ax1.set_title(f'{type} Loss Plots', fontsize=35.0)
     ax1.set_xlabel('Epochs', fontsize=35.0)
     ax1.set_ylabel('Cross Entropy Loss', fontsize=35.0)
-    ax1.legend(loc="upper right", fontsize=35.0)
+    ax1.legend(loc="upper right", fontsize=16.0)
     plt.savefig(saveLocation+"loss.png")
 
     #Saving the losses and accuracies for further offline use

@@ -28,7 +28,7 @@ def init_weights(m):
 BATCH_SIZE = 16
 TRANSFORM_PROBABILLITY = 0.1
 
-epochs = 100
+epochs = 2
 
 n_class = 21
 
@@ -66,7 +66,7 @@ class_weights = class_weights.to(device)
 fcn_model = fcn_model.to(device=device)  # TODO transfer the model to the device
 
 
-def train(image_label):
+def train(save_location):
 
     # ---------------------------------
     # Initialize network, progress bar,
@@ -125,6 +125,8 @@ def train(image_label):
         
         if current_miou_score > best_iou_score:
             best_iou_score = current_miou_score
+            path = save_location + 'model.pt'
+            torch.save(fcn_model, path)
             # save the best model
 
         if epoch > 0 and early_stop and current_val_loss > val_loss[epoch - 1]:
@@ -139,7 +141,7 @@ def train(image_label):
         
         training_pbar.update(1)
     training_pbar.close()
-    util.plots(train_loss, val_loss, val_accuracy, mean_iou_scores, earlyStop, saveLocation = image_label)
+    util.plots(train_loss, val_loss, val_accuracy, mean_iou_scores, earlyStop, saveLocation = save_location)
 
 
 def val(epoch):
@@ -175,8 +177,12 @@ def val(epoch):
 
 
 # TODO
-def modelTest():
-    fcn_model.eval()  # Put in eval mode (disables batchnorm/dropout) !
+def modelTest(save_location):
+    # use best model from training to evaluate testing data 
+    path = save_location+'model.pt'
+    model = torch.load(path)
+    model.eval()
+    #fcn_model.eval()  # Put in eval mode (disables batchnorm/dropout) !
 
     with torch.no_grad():  # we don't need to calculate the gradient in the validation/testing
 
@@ -184,7 +190,7 @@ def modelTest():
             # TODO
             pass
 
-    fcn_model.train()  # TURNING THE TRAIN MODE BACK ON TO ENABLE BATCHNORM/DROPOUT!!
+    #fcn_model.train()  # TURNING THE TRAIN MODE BACK ON TO ENABLE BATCHNORM/DROPOUT!!
 
 
 if __name__ == "__main__":
@@ -192,10 +198,10 @@ if __name__ == "__main__":
     path = 'Results'
     if not os.path.exists(path):
       os.mkdir(path)
-    image_location = path+"/model3"
+    save_location = path+"/model3a"
     val(0)  # show the accuracy before training
-    train(image_location)
-    modelTest()
+    train(save_location)
+    modelTest(save_location)
 
     # housekeeping
     gc.collect()
