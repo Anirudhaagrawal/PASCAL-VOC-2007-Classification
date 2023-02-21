@@ -3,10 +3,14 @@ import torch.nn as nn
 
 
 class Resnet(nn.Module):
-    def __init__(self, n_class):
+    def __init__(self, n_class, freeze_encoder=True):
         self.n_class = n_class
+        self.freeze_encoder = freeze_encoder
         super(Resnet, self).__init__()
         resnet = models.resnet18(weights='ResNet18_Weights.DEFAULT')
+        if self.freeze_encoder:
+            for param in resnet.parameters():
+                param.requires_grad = False
         modules = list(resnet.children())[:-2]
         self.resnet = nn.Sequential(*modules)
         self.relu = nn.ReLU(inplace=True)

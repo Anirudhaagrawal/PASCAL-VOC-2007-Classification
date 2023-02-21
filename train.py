@@ -14,6 +14,7 @@ import numpy as np
 import torch.backends.mps as backends
 from resnet import *
 from unet import *
+from resnet50 import *
 
 
 class MaskToTensor(object):
@@ -32,12 +33,13 @@ def init_weights_transfer_learning(m):
         torch.nn.init.xavier_uniform_(m.weight.data)
         torch.nn.init.normal_(m.bias.data)  # xavier not applicable for biases
 
-
+FREEZE_ENCODER = True
 BATCH_SIZE = 16
 TRANSFORM_PROBABILLITY = 0.1
 U_NET = False
 Fcn = False
 RESNET = True
+RESNET50 = False
 epochs = 30
 
 n_class = 21
@@ -61,11 +63,14 @@ if U_NET:
     fcn_model = UNet(n_class=n_class)
     fcn_model.apply(init_weights)
 elif RESNET:
-    fcn_model = Resnet(n_class=n_class)
+    fcn_model = Resnet(n_class=n_class, freeze_encoder=FREEZE_ENCODER)
     fcn_model.apply(init_weights_transfer_learning)
 elif Fcn:
     fcn_model = FCN(n_class=n_class)
     fcn_model.apply(init_weights)
+elif RESNET50:
+    fcn_model = Resnet50(n_class=n_class, freeze_encoder=FREEZE_ENCODER)
+    fcn_model.apply(init_weights_transfer_learning)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'  # TODO determine which device to use (cuda or cpu)
 
