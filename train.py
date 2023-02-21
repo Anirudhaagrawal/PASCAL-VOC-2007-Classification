@@ -33,7 +33,7 @@ def init_weights_transfer_learning(m):
         torch.nn.init.normal_(m.bias.data)  # xavier not applicable for biases
 
 
-config = yaml.load(open('config5a-2.yml', 'r'), Loader=yaml.SafeLoader)
+config = yaml.load(open('configs/config5a-2.yml', 'r'), Loader=yaml.SafeLoader)
 
 cosine_annealing = config['cosine_annealing']
 random_transforms = config['random_transforms']
