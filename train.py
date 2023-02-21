@@ -66,6 +66,9 @@ fcn_model = fcn_model.to(device=device)  # TODO transfer the model to the device
 # TODO
 def train():
     best_iou_score = 0.0
+    losses = []
+    mean_iou_scores = []
+    accuracy = []
 
     for epoch in range(epochs):
         ts = time.time()
@@ -89,12 +92,16 @@ def train():
 
         print("Finish epoch {}, time elapsed {}".format(epoch, time.time() - ts))
 
-        current_miou_score = val(epoch)
+        current_miou_score, current_accuracy, current_loss = val(epoch)
+        losses.append(current_loss)
+        mean_iou_scores.append(current_miou_score)
+        accuracy.append(current_accuracy)
+
 
         if current_miou_score > best_iou_score:
             best_iou_score = current_miou_score
             # save the best model
-
+    util.plots(losses, mean_iou_scores, accuracy, epochs)
 
 # TODO
 def val(epoch):
@@ -124,7 +131,7 @@ def val(epoch):
 
     fcn_model.train()  # TURNING THE TRAIN MODE BACK ON TO ENABLE BATCHNORM/DROPOUT!!
 
-    return np.mean(mean_iou_scores)
+    return np.mean(mean_iou_scores), np.mean(accuracy), np.mean(losses)
 
 
 # TODO
