@@ -1,9 +1,11 @@
 import os
-
+import torchvision.transforms as transforms
+import torchvision.transforms.functional as TF
 import torch
 from PIL import Image
 from torch.utils import data
 import torchvision
+import random
 
 num_classes = 21
 ignore_label = 255
@@ -67,17 +69,34 @@ class VOC(data.Dataset):
     def __getitem__(self, index):
 
         img_path, mask_path = self.imgs[index]
-        img = Image.open(img_path).convert('RGB').resize((self.width, self.height))
+        image = Image.open(img_path).convert('RGB').resize((self.width, self.height))
         mask = Image.open(mask_path).resize((self.width, self.height))
 
         if self.transform is not None:
-            img = self.transform(img)
+            image = self.transform(image)
         if self.target_transform is not None:
             mask = self.target_transform(mask)
 
+        # Random crop
+        i, j, h, w = transforms.RandomCrop.get_params(
+            image, output_size=(224, 224))
+        image = TF.crop(image, i, j, h, w)
+        mask = TF.crop(mask, i, j, h, w)
+
+        # Random horizontal flipping
+        if random.random() > 0.5:
+            image = TF.hflip(image)
+            mask = TF.hflip(mask)
+
+        # Random vertical flipping
+        if random.random() > 0.9:
+            image = TF.vflip(image)
+            mask = TF.vflip(mask)
+
+
         mask[mask==ignore_label]=0
 
-        return img, mask
+        return image, mask
 
     def __len__(self):
         return len(self.imgs)
@@ -88,5 +107,5 @@ class VOC(data.Dataset):
             _, mask = self.__getitem__(i)
             for j in range(21):
                 class_count[j] += torch.sum(mask==j)
-        class_weights = 1./class_count
+        class_weights = 1 - class_count/torch.sum(class_count)
         return class_weights
