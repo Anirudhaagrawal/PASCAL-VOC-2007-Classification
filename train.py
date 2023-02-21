@@ -12,6 +12,8 @@ import torchvision.transforms as standard_transforms
 import util
 import numpy as np
 import torch.backends.mps as backends
+from resnet import *
+from unet import *
 
 
 class MaskToTensor(object):
@@ -25,10 +27,18 @@ def init_weights(m):
         torch.nn.init.normal_(m.bias.data)  # xavier not applicable for biases
 
 
+def init_weights_transfer_learning(m):
+    if isinstance(m, nn.ConvTranspose2d):
+        torch.nn.init.xavier_uniform_(m.weight.data)
+        torch.nn.init.normal_(m.bias.data)  # xavier not applicable for biases
+
+
 BATCH_SIZE = 16
 TRANSFORM_PROBABILLITY = 0.1
-
-epochs = 100
+U_NET = False
+Fcn = False
+RESNET = True
+epochs = 30
 
 n_class = 21
 
@@ -47,9 +57,15 @@ test_dataset = voc.VOC('test', transform=input_transform, target_transform=targe
 train_loader = DataLoader(dataset=train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 val_loader = DataLoader(dataset=val_dataset, batch_size=BATCH_SIZE, shuffle=False)
 test_loader = DataLoader(dataset=test_dataset, batch_size=BATCH_SIZE, shuffle=False)
-
-fcn_model = FCN(n_class=n_class)
-fcn_model.apply(init_weights)
+if U_NET:
+    fcn_model = UNet(n_class=n_class)
+    fcn_model.apply(init_weights)
+elif RESNET:
+    fcn_model = Resnet(n_class=n_class)
+    fcn_model.apply(init_weights_transfer_learning)
+elif Fcn:
+    fcn_model = FCN(n_class=n_class)
+    fcn_model.apply(init_weights)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'  # TODO determine which device to use (cuda or cpu)
 
@@ -114,6 +130,7 @@ def train(image_label):
             loss.backward()
             optimizer.step()
             scheduler.step(epoch + iter / iters)
+
             inner_pbar.update(train_loader.batch_size)
         train_loss[epoch] = np.mean(train_losses)
         inner_pbar.close()
@@ -122,7 +139,7 @@ def train(image_label):
         val_loss[epoch]=current_val_loss
         mean_iou_scores[epoch]=current_miou_score
         val_accuracy[epoch]=current_accuracy
-        
+
         if current_miou_score > best_iou_score:
             best_iou_score = current_miou_score
             # save the best model
@@ -140,7 +157,6 @@ def train(image_label):
         training_pbar.update(1)
     training_pbar.close()
     util.plots(train_loss, val_loss, val_accuracy, mean_iou_scores, earlyStop, saveLocation = image_label)
-
 
 def val(epoch):
     fcn_model.eval()  # Put in eval mode (disables batchnorm/dropout) !
@@ -177,12 +193,21 @@ def val(epoch):
 # TODO
 def modelTest():
     fcn_model.eval()  # Put in eval mode (disables batchnorm/dropout) !
-
+    i=0
     with torch.no_grad():  # we don't need to calculate the gradient in the validation/testing
 
         for iter, (input, label) in enumerate(test_loader):
-            # TODO
-            pass
+            input = input.to(device)
+            output = fcn_model.forward(input)
+
+            output = output.to('cpu')
+            loss = criterion(output, label)
+
+            pred = output.argmax(dim=1)
+
+            input = input.to('cpu')
+            util.plot_predictions(input[0], label[0], pred[0], i)
+            i = i + 1
 
     fcn_model.train()  # TURNING THE TRAIN MODE BACK ON TO ENABLE BATCHNORM/DROPOUT!!
 
