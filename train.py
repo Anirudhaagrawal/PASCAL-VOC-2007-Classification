@@ -111,7 +111,7 @@ def train(save_location):
     train_loss = np.zeros(epochs)
     mean_iou_scores = np.zeros(epochs)
     val_accuracy = np.zeros(epochs)
-    early_stop_patience = 2
+    early_stop_patience = 3
     early_stop = True # flag to identify if early stopping is desired
 
     # number of consecutive epochs where
