@@ -112,13 +112,8 @@ def train(save_location):
     train_loss = np.zeros(epochs)
     mean_iou_scores = np.zeros(epochs)
     val_accuracy = np.zeros(epochs)
-<<<<<<< HEAD
     early_stop_patience = 3
     early_stop = True # flag to identify if early stopping is desired
-=======
-    early_stop_patience = 2
-    early_stop = True  # flag to identify if early stopping is desired
->>>>>>> 3ef743a0303178252dfd420c7ee2cc7a67fd2642
 
     # number of consecutive epochs where
     # model performs worse
