@@ -104,3 +104,20 @@ def plots(losses, mean_iou_scores, accuracy, earlyStop):
     ax3.legend(loc="upper right", fontsize=35.0)
     plt.savefig("accuracy.png")
     plt.show()
+
+
+def plot_predictions(image, mask, pred, name):
+    """
+    Helper function for plotting the predictions
+    """
+    fig, ax = plt.subplots(1, 3, figsize=(24, 8))
+    ax[0].imshow(image.permute(1, 2, 0))
+    ax[0].set_title("Image")
+    ax[1].imshow(mask)
+    ax[1].set_title("Mask")
+    ax[2].imshow(pred)
+    ax[2].set_title("Prediction")
+    plt.savefig("pred" + str(name) + ".png")
+    plt.show()
+
+

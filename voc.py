@@ -108,4 +108,5 @@ class VOC(data.Dataset):
             for j in range(21):
                 class_count[j] += torch.sum(mask==j)
         class_weights = 1 - class_count/torch.sum(class_count)
+        class_weights = class_weights/torch.sum(class_weights)
         return class_weights
