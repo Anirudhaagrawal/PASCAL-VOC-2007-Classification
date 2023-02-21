@@ -12,9 +12,9 @@ epochs: 50
 batch_size: 16
 
 # "unet", "resnet", "fcn", or "new_arch"
-model_type: resnet
+model_type: resnet50
 
 freeze_encoder: True
 
 # model identifier for save location of best model, figures and data
-model_identifier: part5b
+model_identifier: part5b-2

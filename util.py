@@ -1,6 +1,5 @@
-import numpy as np
-import torch
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 
@@ -62,7 +61,7 @@ def pixel_acc(pred, target) -> float:
     return correct_pixels / n_pixels
 
 
-def plots(trainEpochLoss, valEpochLoss, valEpochAccuracy, valIoU, earlyStop, type = "", saveLocation = "test_"):
+def plots(trainEpochLoss, valEpochLoss, valEpochAccuracy, valIoU, earlyStop, type="", saveLocation="test_"):
     """
     Helper function for creating the plots
     earlyStop is the epoch at which early stop occurred and will correspond to the best model. e.g. earlyStop=-1 means the last epoch was the best one
@@ -74,26 +73,25 @@ def plots(trainEpochLoss, valEpochLoss, valEpochAccuracy, valIoU, earlyStop, typ
         valEpochAccuracy = valEpochAccuracy[0:earlyStop + 1]
     # plotting
     fig1, ax1 = plt.subplots(figsize=((12, 6)))
-    epochs = np.arange(1,len(trainEpochLoss)+1,1)
+    epochs = np.arange(1, len(trainEpochLoss) + 1, 1)
     ax1.plot(epochs, trainEpochLoss, 'r', label=f'Training Loss')
     ax1.plot(epochs, valEpochLoss, 'g', label=f'Validation Loss')
-    ax1.scatter(epochs[earlyStop],valEpochLoss[earlyStop],marker='x', c='g',s=400,label='Early Stop Epoch')
-    plt.xticks(ticks=np.arange(min(epochs),max(epochs)+1,10), fontsize=35 )
+    ax1.scatter(epochs[earlyStop], valEpochLoss[earlyStop], marker='x', c='g', s=400, label='Early Stop Epoch')
+    plt.xticks(ticks=np.arange(min(epochs), max(epochs) + 1, 10), fontsize=35)
     plt.yticks(fontsize=35)
     ax1.set_title(f'{type} Loss Plots', fontsize=35.0)
     ax1.set_xlabel('Epochs', fontsize=35.0)
     ax1.set_ylabel('Cross Entropy Loss', fontsize=35.0)
     ax1.legend(loc="upper right", fontsize=16.0)
-    plt.savefig(saveLocation+"loss.png")
+    plt.savefig(saveLocation + "loss.png")
 
-    pd.DataFrame(trainEpochLoss).to_csv(saveLocation+"trainEpochLoss.csv")
-    pd.DataFrame(valEpochLoss).to_csv(saveLocation+"valEpochLoss.csv")
-    pd.DataFrame(valIoU).to_csv(saveLocation+"valIoU.csv")
-    pd.DataFrame(valEpochAccuracy).to_csv(saveLocation+"valEpochAccuracy.csv")
+    pd.DataFrame(trainEpochLoss).to_csv(saveLocation + "trainEpochLoss.csv")
+    pd.DataFrame(valEpochLoss).to_csv(saveLocation + "valEpochLoss.csv")
+    pd.DataFrame(valIoU).to_csv(saveLocation + "valIoU.csv")
+    pd.DataFrame(valEpochAccuracy).to_csv(saveLocation + "valEpochAccuracy.csv")
 
 
-
-def plot_predictions(image, mask, pred, save_location):
+def plot_predictions(image, mask, pred, save_location, i):
     """
     Helper function for plotting the predictions
     """
@@ -104,6 +102,4 @@ def plot_predictions(image, mask, pred, save_location):
     ax[1].set_title("Mask")
     ax[2].imshow(pred)
     ax[2].set_title("Prediction")
-    plt.savefig(save_location + "predictions.png")
-
-
+    plt.savefig(save_location + "predictions" + str(i) + ".png")
