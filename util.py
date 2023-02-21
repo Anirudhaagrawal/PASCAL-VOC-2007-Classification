@@ -1,8 +1,9 @@
 import numpy as np
 import torch
+import matplotlib.pyplot as plt
 
 
-def iou(pred, target, n_classes:int=21) -> float:
+def iou(pred, target, n_classes: int = 21) -> float:
     """
     Compute the Intersection-over-Union (IoU) of a single pattern, where
     for some object class k:
@@ -29,7 +30,7 @@ def iou(pred, target, n_classes:int=21) -> float:
     for k in range(n_classes):
         # calc the union of the pixels in pred and target labeled class k
         union = np.count_nonzero(np.logical_or(pred == k, target == k))
-        union=union+1e-10
+        union = union + 1e-10
         # calc the intersection of the pixels in pred and target labeled class k
         intersect = np.count_nonzero(np.logical_and(pred == k, target == k))
         # calc the IoU for class k
@@ -58,3 +59,48 @@ def pixel_acc(pred, target) -> float:
     correct_pixels = np.count_nonzero(pred == target)
     # calc and return the pixel accuracy
     return correct_pixels / n_pixels
+
+
+def plots(losses, mean_iou_scores, accuracy, earlyStop):
+    """
+    Helper function for creating the plots
+    earlyStop is the epoch at which early stop occurred and will correspond to the best model. e.g. earlyStop=-1 means the last epoch was the best one
+    """
+    fig1, ax1 = plt.subplots(figsize=((24, 12)))
+    epochs = [x for x in range(earlyStop)]
+    ax1.plot(epochs, losses, 'r', label="Loss")
+    #    plt.scatter(epochs[earlyStop], valEpochLoss[earlyStop], marker='x', c='g', s=400, label='Early Stop Epoch')
+    plt.xticks(ticks=np.arange(min(epochs), max(epochs) + 1, 10), fontsize=35)
+    plt.yticks(fontsize=35)
+    ax1.set_title('Loss', fontsize=35.0)
+    ax1.set_xlabel('Epochs', fontsize=35.0)
+    ax1.set_ylabel('Cross Entropy Loss', fontsize=35.0)
+    ax1.legend(loc="upper right", fontsize=35.0)
+    plt.savefig("loss.png")
+    plt.show()
+
+    fig2, ax2 = plt.subplots(figsize=((24, 12)))
+    epochs = [x for x in range(earlyStop)]
+    ax2.plot(epochs, mean_iou_scores, 'r', label="IOU")
+    #    plt.scatter(epochs[earlyStop], valEpochLoss[earlyStop], marker='x', c='g', s=400, label='Early Stop Epoch')
+    plt.xticks(ticks=np.arange(min(epochs), max(epochs) + 1, 10), fontsize=35)
+    plt.yticks(fontsize=35)
+    ax2.set_title('IOU', fontsize=35.0)
+    ax2.set_xlabel('Epochs', fontsize=35.0)
+    ax2.set_ylabel('Mean IOU', fontsize=35.0)
+    ax2.legend(loc="upper right", fontsize=35.0)
+    plt.savefig("iou.png")
+    plt.show()
+
+    fig3, ax3 = plt.subplots(figsize=((24, 12)))
+    epochs = [x for x in range(earlyStop)]
+    ax3.plot(epochs, accuracy, 'r', label="Accuracy")
+    #    plt.scatter(epochs[earlyStop], valEpochLoss[earlyStop], marker='x', c='g', s=400, label='Early Stop Epoch')
+    plt.xticks(ticks=np.arange(min(epochs), max(epochs) + 1, 10), fontsize=35)
+    plt.yticks(fontsize=35)
+    ax3.set_title('Accuracy', fontsize=35.0)
+    ax3.set_xlabel('Epochs', fontsize=35.0)
+    ax3.set_ylabel('Pixel Accuracy', fontsize=35.0)
+    ax3.legend(loc="upper right", fontsize=35.0)
+    plt.savefig("accuracy.png")
+    plt.show()

@@ -68,7 +68,9 @@ fcn_model = fcn_model.to(device=device)  # TODO transfer the model to the device
 # TODO
 def train():
     best_iou_score = 0.0
-    # plot data
+    losses = []
+    mean_iou_scores = []
+    accuracy = []
 
     # weights = train_dataset.get_class_weights()
     # loading bar
@@ -93,12 +95,19 @@ def train():
             scheduler.step(epoch + iter / iters)
             inner_pbar.update(train_loader.batch_size)
         inner_pbar.close()
-        current_mean_iou_score = val(epoch)
-        if current_mean_iou_score > best_iou_score:
-            best_iou_score = current_mean_iou_score
+        
+        current_miou_score, current_accuracy, current_loss = val(epoch)
+        losses.append(current_loss)
+        mean_iou_scores.append(current_miou_score)
+        accuracy.append(current_accuracy)
+        
+        if current_miou_score > best_iou_score:
+            best_iou_score = current_miou_score
             # save the best model
+        
         training_pbar.update(1)
     training_pbar.close()
+    util.plots(losses, mean_iou_scores, accuracy, epochs)
 
 
  #TODO
@@ -131,7 +140,7 @@ def val(epoch):
 
     fcn_model.train()  # TURNING THE TRAIN MODE BACK ON TO ENABLE BATCHNORM/DROPOUT!!
 
-    return np.mean(mean_iou_scores)
+    return np.mean(mean_iou_scores), np.mean(accuracy), np.mean(losses)
 
 
 # TODO
