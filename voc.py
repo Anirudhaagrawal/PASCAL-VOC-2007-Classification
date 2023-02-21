@@ -56,13 +56,14 @@ def make_dataset(mode):
 
 
 class VOC(data.Dataset):
-    def __init__(self, mode, transform=torchvision.transforms.ToTensor(), target_transform=torchvision.transforms.ToTensor()):
+    def __init__(self, mode, random_transforms, transform=torchvision.transforms.ToTensor(), target_transform=torchvision.transforms.ToTensor()):
         self.imgs = make_dataset(mode)
         if len(self.imgs) == 0:
             raise RuntimeError('Found 0 images, please check the data set')
         self.mode = mode
         self.transform = transform
         self.target_transform = target_transform
+        self.random_transforms = random_transforms
         self.width = 224
         self.height = 224
 
@@ -71,28 +72,26 @@ class VOC(data.Dataset):
         img_path, mask_path = self.imgs[index]
         image = Image.open(img_path).convert('RGB').resize((self.width, self.height))
         mask = Image.open(mask_path).resize((self.width, self.height))
-
         if self.transform is not None:
             image = self.transform(image)
         if self.target_transform is not None:
             mask = self.target_transform(mask)
+        if self.random_transforms:
+            # Random crop
+            i, j, h, w = transforms.RandomCrop.get_params(
+                image, output_size=(224, 224))
+            image = TF.crop(image, i, j, h, w)
+            mask = TF.crop(mask, i, j, h, w)
 
-        # Random crop
-        i, j, h, w = transforms.RandomCrop.get_params(
-            image, output_size=(224, 224))
-        image = TF.crop(image, i, j, h, w)
-        mask = TF.crop(mask, i, j, h, w)
+            # Random horizontal flipping
+            if random.random() > 0.5:
+                image = TF.hflip(image)
+                mask = TF.hflip(mask)
 
-        # Random horizontal flipping
-        if random.random() > 0.5:
-            image = TF.hflip(image)
-            mask = TF.hflip(mask)
-
-        # Random vertical flipping
-        if random.random() > 0.9:
-            image = TF.vflip(image)
-            mask = TF.vflip(mask)
-
+            # Random vertical flipping
+            if random.random() > 0.9:
+                image = TF.vflip(image)
+                mask = TF.vflip(mask)
 
         mask[mask==ignore_label]=0
 

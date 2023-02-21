@@ -1,0 +1,18 @@
+# randomly transform training patterns
+random_transforms: True
+
+# Cosine annealing learning rate
+# scheduler
+cosine_annealing: True
+
+# apply fix for class imbalance with
+# custom class weights
+class_imbalance_fix: True
+epochs: 30
+batch_size: 16
+
+# "unet", "resnet", "fcn", or "new_arch"
+model_type: fcn
+
+# model identifier for save location of best model, figures and data
+model_identifier: part4c
