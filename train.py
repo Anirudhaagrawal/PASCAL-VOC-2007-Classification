@@ -66,7 +66,7 @@ fcn_model = fcn_model.to(device=device)  # TODO transfer the model to the device
 
 
 # TODO
-def train():
+def train(savelocation):
     best_iou_score = 0.0
     losses = []
     mean_iou_scores = []
@@ -107,7 +107,7 @@ def train():
         
         training_pbar.update(1)
     training_pbar.close()
-    util.plots(losses, mean_iou_scores, accuracy, epochs)
+    util.plots(losses, mean_iou_scores, accuracy, epochs, savelocation)
 
 
  #TODO
@@ -157,6 +157,7 @@ def modelTest():
 
 
 if __name__ == "__main__":
+    savelocation = "model3";
     val(0)  # show the accuracy before training
     train()
 

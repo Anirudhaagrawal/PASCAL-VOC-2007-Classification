@@ -61,7 +61,7 @@ def pixel_acc(pred, target) -> float:
     return correct_pixels / n_pixels
 
 
-def plots(losses, mean_iou_scores, accuracy, earlyStop):
+def plots(losses, mean_iou_scores, accuracy, earlyStop, savelocation = "image_"):
     """
     Helper function for creating the plots
     earlyStop is the epoch at which early stop occurred and will correspond to the best model. e.g. earlyStop=-1 means the last epoch was the best one
@@ -76,7 +76,7 @@ def plots(losses, mean_iou_scores, accuracy, earlyStop):
     ax1.set_xlabel('Epochs', fontsize=35.0)
     ax1.set_ylabel('Cross Entropy Loss', fontsize=35.0)
     ax1.legend(loc="upper right", fontsize=35.0)
-    plt.savefig("loss.png")
+    plt.savefig(savelocation+"loss.png")
     plt.show()
 
     fig2, ax2 = plt.subplots(figsize=((24, 12)))
@@ -89,7 +89,7 @@ def plots(losses, mean_iou_scores, accuracy, earlyStop):
     ax2.set_xlabel('Epochs', fontsize=35.0)
     ax2.set_ylabel('Mean IOU', fontsize=35.0)
     ax2.legend(loc="upper right", fontsize=35.0)
-    plt.savefig("iou.png")
+    plt.savefig(savelocation+"iou.png")
     plt.show()
 
     fig3, ax3 = plt.subplots(figsize=((24, 12)))
@@ -102,5 +102,5 @@ def plots(losses, mean_iou_scores, accuracy, earlyStop):
     ax3.set_xlabel('Epochs', fontsize=35.0)
     ax3.set_ylabel('Pixel Accuracy', fontsize=35.0)
     ax3.legend(loc="upper right", fontsize=35.0)
-    plt.savefig("accuracy.png")
+    plt.savefig(savelocation+"accuracy.png")
     plt.show()
