@@ -32,7 +32,8 @@ n_class = 21
 mean_std = ([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 input_transform = standard_transforms.Compose([
     standard_transforms.ToTensor(),
-    standard_transforms.Normalize(*mean_std)
+    standard_transforms.Normalize(*mean_std),
+
 ])
 target_transform = MaskToTensor()
 
