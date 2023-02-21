@@ -8,3 +8,5 @@ cosine_annealing: true
 class_imbalance_fix: true
 epochs: 30
 batch_size: 16
+# "unet", "resnet", or "fcn"
+model_type: fcn

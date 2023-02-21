@@ -44,10 +44,12 @@ random_transforms = config['random_transforms']
 use_class_weights = config['class_imbalance_fix']
 epochs = config['epochs']
 batch_size = config['batch_size']
+model_type = config['model_type']
 
 print(f'cosine annealing:\t{cosine_annealing}')
 print(f'random transforms:\t{random_transforms}')
 print(f'use class weights:\t{use_class_weights}')
+print(f'model type:\t\t\t{model_type}')
 print(f'epochs:\t\t\t\t{epochs}')
 print(f'batch size:\t\t\t{batch_size}')
 
@@ -61,20 +63,20 @@ input_transform = standard_transforms.Compose([
 ])
 target_transform = MaskToTensor()
 
-train_dataset = voc.VOC('train', transform=input_transform, target_transform=target_transform)
-val_dataset = voc.VOC('val', transform=input_transform, target_transform=target_transform)
-test_dataset = voc.VOC('test', transform=input_transform, target_transform=target_transform)
+train_dataset = voc.VOC('train', random_transforms, transform=input_transform, target_transform=target_transform)
+val_dataset = voc.VOC('val', random_transforms, transform=input_transform, target_transform=target_transform)
+test_dataset = voc.VOC('test', random_transforms, transform=input_transform, target_transform=target_transform)
 
 train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=False)
 test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
-if U_NET:
+if model_type.lower() == "unet":
     fcn_model = UNet(n_class=n_class)
     fcn_model.apply(init_weights)
-elif RESNET:
+elif model_type.lower() == "resnet":
     fcn_model = Resnet(n_class=n_class)
     fcn_model.apply(init_weights_transfer_learning)
-elif Fcn:
+else:
     fcn_model = FCN(n_class=n_class)
     fcn_model.apply(init_weights)
 
