@@ -33,10 +33,6 @@ def init_weights_transfer_learning(m):
         torch.nn.init.xavier_uniform_(m.weight.data)
         torch.nn.init.normal_(m.bias.data)  # xavier not applicable for biases
 
-U_NET = False
-Fcn = False
-RESNET = True
-
 config = yaml.load(open('config.yml', 'r'), Loader=yaml.SafeLoader)
 
 cosine_annealing = config['cosine_annealing']
