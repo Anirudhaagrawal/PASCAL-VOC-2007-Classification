@@ -93,7 +93,7 @@ def plots(trainEpochLoss, valEpochLoss, valEpochAccuracy, valIoU, earlyStop, typ
 
 
 
-def plot_predictions(image, mask, pred, name):
+def plot_predictions(image, mask, pred, save_location):
     """
     Helper function for plotting the predictions
     """
@@ -104,6 +104,6 @@ def plot_predictions(image, mask, pred, name):
     ax[1].set_title("Mask")
     ax[2].imshow(pred)
     ax[2].set_title("Prediction")
-    plt.savefig("Results/pred" + str(name) + ".png")
+    plt.savefig(save_location + "predictions.png")
 
 

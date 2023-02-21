@@ -1,7 +1,7 @@
 import torch.nn as nn
 
 #ToDO Fill in the __ values
-class FCN(nn.Module):
+class New_Arch(nn.Module):
 
     def __init__(self, n_class):
         super().__init__()

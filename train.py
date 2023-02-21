@@ -74,6 +74,9 @@ if model_type.lower() == "unet":
 elif model_type.lower() == "resnet":
     fcn_model = Resnet(n_class=n_class)
     fcn_model.apply(init_weights_transfer_learning)
+elif model_type.lower() == "new_arch":
+    fcn_model = New_Arch(n_class=n_class)
+    fcn_model.apply(init_weights)
 else:
     fcn_model = FCN(n_class=n_class)
     fcn_model.apply(init_weights)
@@ -228,7 +231,7 @@ def modelTest(save_location):
             pred = output.argmax(dim=1)
 
             input = input.to('cpu')
-            util.plot_predictions(input[0], label[0], pred[0], i)
+            util.plot_predictions(input[0], label[0], pred[0], save_location)
             i = i + 1
 
 
