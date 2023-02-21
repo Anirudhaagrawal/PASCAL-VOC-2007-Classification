@@ -1,5 +1,6 @@
 from tqdm import tqdm
 
+import os
 from basic_fcn import *
 import time
 from torch.utils.data import DataLoader
@@ -27,7 +28,7 @@ def init_weights(m):
 BATCH_SIZE = 16
 TRANSFORM_PROBABILLITY = 0.1
 
-epochs = 30
+epochs = 100
 
 n_class = 21
 
@@ -65,21 +66,39 @@ class_weights = class_weights.to(device)
 fcn_model = fcn_model.to(device=device)  # TODO transfer the model to the device
 
 
-# TODO
 def train(image_label):
+
+    # ---------------------------------
+    # Initialize network, progress bar,
+    # arrays to record train/val accuracy
+    # and loss, counter of bad epochs
+    # ---------------------------------
     best_iou_score = 0.0
-    losses = []
-    mean_iou_scores = []
-    accuracy = []
+    val_loss = np.zeros(epochs)
+    train_loss = np.zeros(epochs)
+    mean_iou_scores = np.zeros(epochs)
+    val_accuracy = np.zeros(epochs)
+    early_stop_patience = 2
+    early_stop = True # flag to identify if early stopping is desired
+
+    # number of consecutive epochs where
+    # model performs worse
+    bad_epochs = 0
+    earlyStop = -1
 
     # weights = train_dataset.get_class_weights()
     # loading bar
     training_pbar = tqdm(total=epochs, desc=f'Training Procedure', position=0)
     train_size = len(train_loader.dataset)
+
+    # ------------------
+    # Training Procedure
+    # ------------------
     for epoch in range(epochs):
         inner_pbar = tqdm(total=train_size, desc=f'Training Epoch {epoch + 1}', position=0, leave=True)
         ts = time.time()
         iters = len(train_loader)
+        train_losses = []
         for iter, (inputs, labels) in enumerate(train_loader):
             optimizer.zero_grad()
             criterion = nn.CrossEntropyLoss(weight=class_weights)
@@ -90,27 +109,39 @@ def train(image_label):
             outputs = fcn_model.forward(inputs)
 
             loss = criterion(outputs, labels)
+            train_losses.append(loss.item())
+
             loss.backward()
             optimizer.step()
             scheduler.step(epoch + iter / iters)
             inner_pbar.update(train_loader.batch_size)
+        train_loss[epoch] = np.mean(train_losses)
         inner_pbar.close()
         
-        current_miou_score, current_accuracy, current_loss = val(epoch)
-        losses.append(current_loss)
-        mean_iou_scores.append(current_miou_score)
-        accuracy.append(current_accuracy)
+        current_miou_score, current_accuracy, current_val_loss = val(epoch)
+        val_loss[epoch]=current_val_loss
+        mean_iou_scores[epoch]=current_miou_score
+        val_accuracy[epoch]=current_accuracy
         
         if current_miou_score > best_iou_score:
             best_iou_score = current_miou_score
             # save the best model
+
+        if epoch > 0 and early_stop and current_val_loss > val_loss[epoch - 1]:
+            bad_epochs += 1
+        else:
+            bad_epochs = 0
+        if bad_epochs > early_stop_patience:
+            earlyStop = epoch
+            print(f'Patience threshold reached ({early_stop_patience} epochs).')
+            print(f'Early stopping after completing epoch {epoch + 1}.')
+            break
         
         training_pbar.update(1)
     training_pbar.close()
-    util.plots(losses, mean_iou_scores, accuracy, epochs, image_label)
+    util.plots(train_loss, val_loss, val_accuracy, mean_iou_scores, earlyStop, saveLocation = image_label)
 
 
- #TODO
 def val(epoch):
     fcn_model.eval()  # Put in eval mode (disables batchnorm/dropout) !
 
@@ -157,10 +188,13 @@ def modelTest():
 
 
 if __name__ == "__main__":
-    image_label = "model3";
+    import os
+    path = 'Results'
+    if not os.path.exists(path):
+      os.mkdir(path)
+    image_location = path+"/model3"
     val(0)  # show the accuracy before training
-    train()
-
+    train(image_location)
     modelTest()
 
     # housekeeping

@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
+import pandas as pd
 
 
 def iou(pred, target, n_classes: int = 21) -> float:
@@ -61,46 +62,33 @@ def pixel_acc(pred, target) -> float:
     return correct_pixels / n_pixels
 
 
-def plots(losses, mean_iou_scores, accuracy, earlyStop, savelocation = "image_"):
+def plots(trainEpochLoss, valEpochLoss, valEpochAccuracy, valIoU, earlyStop, type = "", saveLocation = "test_"):
     """
     Helper function for creating the plots
     earlyStop is the epoch at which early stop occurred and will correspond to the best model. e.g. earlyStop=-1 means the last epoch was the best one
     """
-    fig1, ax1 = plt.subplots(figsize=((24, 12)))
-    epochs = [x for x in range(earlyStop)]
-    ax1.plot(epochs, losses, 'r', label="Loss")
-    #    plt.scatter(epochs[earlyStop], valEpochLoss[earlyStop], marker='x', c='g', s=400, label='Early Stop Epoch')
-    plt.xticks(ticks=np.arange(min(epochs), max(epochs) + 1, 10), fontsize=35)
+    # slice array according to early stop
+    if earlyStop != -1:
+        trainEpochLoss = trainEpochLoss[0:earlyStop + 1]
+        trainEpochAccuracy = trainEpochAccuracy[0:earlyStop + 1]
+        valEpochLoss = valEpochLoss[0:earlyStop + 1]
+        valEpochAccuracy = valEpochAccuracy[0:earlyStop + 1]
+    # plotting
+    fig1, ax1 = plt.subplots(figsize=((12, 6)))
+    epochs = np.arange(1,len(trainEpochLoss)+1,1)
+    ax1.plot(epochs, trainEpochLoss, 'r', label=f'Training Loss')
+    ax1.plot(epochs, valEpochLoss, 'g', label=f'Validation Loss')
+    ax1.scatter(epochs[earlyStop],valEpochLoss[earlyStop],marker='x', c='g',s=400,label='Early Stop Epoch')
+    plt.xticks(ticks=np.arange(min(epochs),max(epochs)+1,10), fontsize=35 )
     plt.yticks(fontsize=35)
-    ax1.set_title('Loss', fontsize=35.0)
+    ax1.set_title(f'{type} Loss Plots', fontsize=35.0)
     ax1.set_xlabel('Epochs', fontsize=35.0)
     ax1.set_ylabel('Cross Entropy Loss', fontsize=35.0)
     ax1.legend(loc="upper right", fontsize=35.0)
-    plt.savefig(savelocation+"loss.png")
-    plt.show()
+    plt.savefig(saveLocation+"loss.png")
 
-    fig2, ax2 = plt.subplots(figsize=((24, 12)))
-    epochs = [x for x in range(earlyStop)]
-    ax2.plot(epochs, mean_iou_scores, 'r', label="IOU")
-    #    plt.scatter(epochs[earlyStop], valEpochLoss[earlyStop], marker='x', c='g', s=400, label='Early Stop Epoch')
-    plt.xticks(ticks=np.arange(min(epochs), max(epochs) + 1, 10), fontsize=35)
-    plt.yticks(fontsize=35)
-    ax2.set_title('IOU', fontsize=35.0)
-    ax2.set_xlabel('Epochs', fontsize=35.0)
-    ax2.set_ylabel('Mean IOU', fontsize=35.0)
-    ax2.legend(loc="upper right", fontsize=35.0)
-    plt.savefig(savelocation+"iou.png")
-    plt.show()
-
-    fig3, ax3 = plt.subplots(figsize=((24, 12)))
-    epochs = [x for x in range(earlyStop)]
-    ax3.plot(epochs, accuracy, 'r', label="Accuracy")
-    #    plt.scatter(epochs[earlyStop], valEpochLoss[earlyStop], marker='x', c='g', s=400, label='Early Stop Epoch')
-    plt.xticks(ticks=np.arange(min(epochs), max(epochs) + 1, 10), fontsize=35)
-    plt.yticks(fontsize=35)
-    ax3.set_title('Accuracy', fontsize=35.0)
-    ax3.set_xlabel('Epochs', fontsize=35.0)
-    ax3.set_ylabel('Pixel Accuracy', fontsize=35.0)
-    ax3.legend(loc="upper right", fontsize=35.0)
-    plt.savefig(savelocation+"accuracy.png")
-    plt.show()
+    #Saving the losses and accuracies for further offline use
+    pd.DataFrame(trainEpochLoss).to_csv(saveLocation+"trainEpochLoss.csv")
+    pd.DataFrame(valEpochLoss).to_csv(saveLocation+"valEpochLoss.csv")
+    pd.DataFrame(valIoU).to_csv(saveLocation+"valIoU.csv")
+    pd.DataFrame(valEpochAccuracy).to_csv(saveLocation+"valEpochAccuracy.csv")
