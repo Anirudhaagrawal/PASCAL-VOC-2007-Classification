@@ -40,11 +40,15 @@ import torch
 #     return np.average(iou)
 def iou_per_image(pred, target):
     ious = []
+    total = target.numel()
     for k in target.unique():
-        union = torch.count_nonzero(torch.logical_or(pred == k, target == k))
+        pred = pred - k
+        target = target - k
+
+        union = (target==0).sum() + (pred==0).sum()
         union = union + 1e-10
 
-        intersect = torch.count_nonzero(torch.logical_and(pred == k, target == k))
+        intersect = total - torch.count_nonzero(torch.logical_or(pred, target))
 
         iou = intersect / union
         ious.append(iou)
