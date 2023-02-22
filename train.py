@@ -88,7 +88,8 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'  # TODO determine which 
 device = torch.device(device)
 
 optimizer = torch.optim.Adam(fcn_model.parameters(), lr=0.001)
-scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=2, T_mult=1)
+if cosine_annealing:
+    scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=2, T_mult=1)
 weights = train_dataset.get_class_weights()
 if use_class_weights:
     class_weights = torch.FloatTensor(weights)
@@ -132,8 +133,7 @@ def train(save_location):
         iters = len(train_loader)
         train_losses = []
         for iter, (inputs, labels) in enumerate(train_loader):
-            if cosine_annealing:
-                optimizer.zero_grad()
+            optimizer.zero_grad()
             if use_class_weights:
                 criterion = nn.CrossEntropyLoss(weight=class_weights)
             else:
@@ -148,8 +148,8 @@ def train(save_location):
             train_losses.append(loss.item())
 
             loss.backward()
+            optimizer.step()
             if cosine_annealing:
-                optimizer.step()
                 scheduler.step(epoch + iter / iters)
 
             inner_pbar.update(train_loader.batch_size)
