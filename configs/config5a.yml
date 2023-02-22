@@ -11,6 +11,8 @@ class_imbalance_fix: True
 epochs: 30
 batch_size: 16
 
+freeze_encoder: False
+
 # "unet", "resnet", "fcn", or "new_arch"
 model_type: new_arch
 
