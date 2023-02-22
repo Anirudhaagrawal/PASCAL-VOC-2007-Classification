@@ -63,8 +63,8 @@ input_transform = standard_transforms.Compose([
 target_transform = MaskToTensor()
 
 train_dataset = voc.VOC('train', random_transforms, transform=input_transform, target_transform=target_transform)
-val_dataset = voc.VOC('val', random_transforms, transform=input_transform, target_transform=target_transform)
-test_dataset = voc.VOC('test', random_transforms, transform=input_transform, target_transform=target_transform)
+val_dataset = voc.VOC('val', False, transform=input_transform, target_transform=target_transform)
+test_dataset = voc.VOC('test', False, transform=input_transform, target_transform=target_transform)
 
 train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=False)
@@ -223,22 +223,32 @@ def modelTest(save_location):
     path = save_location + 'model.pt'
     model = torch.load(path)
     model.eval()
+    losses = []
+    mean_iou_scores = []
+    accuracy = []
     # fcn_model.eval()  # Put in eval mode (disables batchnorm/dropout) !
     i = 0
     with torch.no_grad():  # we don't need to calculate the gradient in the validation/testing
-
+        test_size = len(test_loader.dataset)
+        val_pbar = tqdm(total=test_size, desc=f'Testing', position=0, leave=True)
         for iter, (input, label) in enumerate(test_loader):
             input = input.to(device)
             output = model.forward(input)
 
             output = output.to('cpu')
             loss = criterion(output, label)
-
+            losses.append(loss.item())
             pred = output.argmax(dim=1)
-
+            mean_iou_scores.append(util.iou(pred, label))
+            accuracy.append(util.pixel_acc(pred, label))
+            val_pbar.update(test_loader.batch_size)
             input = input.to('cpu')
             util.plot_predictions(input[0], label[0], pred[0], save_location, i)
             i = i + 1
+        val_pbar.close()
+    tqdm.write(f"loss\t{np.mean(losses)}")
+    tqdm.write(f"IoU\t{np.mean(mean_iou_scores)}")
+    tqdm.write(f"PA\t{np.mean(accuracy)}")
 
 
 # TURNING THE TRAIN MODE BACK ON TO ENABLE BATCHNORM/DROPOUT!!

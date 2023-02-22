@@ -9,7 +9,7 @@ cosine_annealing: True
 # custom class weights
 class_imbalance_fix: True
 epochs: 50
-batch_size: 16
+batch_size: 32
 
 # "unet", "resnet", "fcn", or "new_arch"
 model_type: resnet_leaky

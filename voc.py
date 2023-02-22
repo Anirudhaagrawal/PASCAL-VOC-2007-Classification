@@ -78,10 +78,11 @@ class VOC(data.Dataset):
             mask = self.target_transform(mask)
         if self.random_transforms:
             # Random crop
-            i, j, h, w = transforms.RandomCrop.get_params(
-                image, output_size=(224, 224))
-            image = TF.crop(image, i, j, h, w)
-            mask = TF.crop(mask, i, j, h, w)
+            if random.random() > 0.5:
+                i, j, h, w = transforms.RandomCrop.get_params(
+                    image, output_size=(224, 224))
+                image = TF.crop(image, i, j, h, w)
+                mask = TF.crop(mask, i, j, h, w)
 
             # Random horizontal flipping
             if random.random() > 0.5:

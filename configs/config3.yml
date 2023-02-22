@@ -8,8 +8,8 @@ cosine_annealing: False
 # apply fix for class imbalance with
 # custom class weights
 class_imbalance_fix: False
-epochs: 30
-batch_size: 16
+epochs: 50
+batch_size: 32
 
 freeze_encoder: False
 
