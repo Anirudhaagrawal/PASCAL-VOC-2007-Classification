@@ -1,4 +1,5 @@
 import gc
+import time
 
 import numpy as np
 import torchvision.transforms as standard_transforms
@@ -247,8 +248,16 @@ if __name__ == "__main__":
         os.mkdir(path)
     save_location = path + '/' + model_identifier
     val(0)  # show the accuracy before training
+    # timekeeping
+    start = time.time()
+
     train(save_location)
     modelTest(save_location)
+
+    end = time.time()
+
+    time_elapsed_ms = end - start
+    print(f'Time elapsed:\t{time_elapsed_ms} millis\t{time_elapsed_ms / 1000} seconds')
 
     # housekeeping
     gc.collect()
