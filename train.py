@@ -14,6 +14,7 @@ from new_arch import *
 from resnet import *
 from resnet50 import *
 from unet import *
+from resnet_leaky_relu import *
 
 
 class MaskToTensor(object):
@@ -78,6 +79,9 @@ elif model_type.lower() == "new_arch":
     fcn_model.apply(init_weights)
 elif model_type.lower() == "resnet50":
     fcn_model = Resnet50(n_class=n_class, freeze_encoder=freeze_encoder)
+    fcn_model.apply(init_weights_transfer_learning)
+elif model_type.lower() == "resnet_leaky":
+    fcn_model = ResnetLeaky(n_class=n_class, freeze_encoder=freeze_encoder)
     fcn_model.apply(init_weights_transfer_learning)
 else:
     fcn_model = FCN(n_class=n_class)
