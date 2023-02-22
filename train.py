@@ -257,7 +257,7 @@ if __name__ == "__main__":
     end = time.time()
 
     time_elapsed_ms = end - start
-    print(f'Time elapsed:\t{time_elapsed_ms} millis\t{time_elapsed_ms / 1000} seconds')
+    print(f'Time elapsed:\t{time_elapsed_ms} seconds')
 
     # housekeeping
     gc.collect()
