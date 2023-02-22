@@ -72,7 +72,7 @@ def plots(trainEpochLoss, valEpochLoss, valEpochAccuracy, valIoU, earlyStop, typ
         valEpochLoss = valEpochLoss[0:earlyStop + 1]
         valEpochAccuracy = valEpochAccuracy[0:earlyStop + 1]
     # plotting
-    fig1, ax1 = plt.subplots(figsize=((12, 6)))
+    fig1, ax1 = plt.subplots(figsize=((24, 12)))
     epochs = np.arange(1, len(trainEpochLoss) + 1, 1)
     ax1.plot(epochs, trainEpochLoss, 'r', label=f'Training Loss')
     ax1.plot(epochs, valEpochLoss, 'g', label=f'Validation Loss')
@@ -82,7 +82,7 @@ def plots(trainEpochLoss, valEpochLoss, valEpochAccuracy, valIoU, earlyStop, typ
     ax1.set_title(f'{type} Loss Plots', fontsize=35.0)
     ax1.set_xlabel('Epochs', fontsize=35.0)
     ax1.set_ylabel('Cross Entropy Loss', fontsize=35.0)
-    ax1.legend(loc="upper right", fontsize=16.0)
+    ax1.legend(loc="upper right", fontsize=35.0)
     plt.savefig(saveLocation + "loss.png")
 
     pd.DataFrame(trainEpochLoss).to_csv(saveLocation + "trainEpochLoss.csv")

@@ -1,4 +1,5 @@
 import gc
+import time
 
 import numpy as np
 import torchvision.transforms as standard_transforms
@@ -34,7 +35,7 @@ def init_weights_transfer_learning(m):
         torch.nn.init.normal_(m.bias.data)  # xavier not applicable for biases
 
 
-config = yaml.load(open('configs/config5a-2.yml', 'r'), Loader=yaml.SafeLoader)
+config = yaml.load(open('configs/config3.yml', 'r'), Loader=yaml.SafeLoader)
 
 cosine_annealing = config['cosine_annealing']
 random_transforms = config['random_transforms']
@@ -92,7 +93,8 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'  # TODO determine which 
 device = torch.device(device)
 
 optimizer = torch.optim.Adam(fcn_model.parameters(), lr=0.001)
-scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=2, T_mult=1)
+if cosine_annealing:
+    scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=2, T_mult=1)
 weights = train_dataset.get_class_weights()
 if use_class_weights:
     class_weights = torch.FloatTensor(weights)
@@ -116,7 +118,7 @@ def train(save_location):
     train_loss = np.zeros(epochs)
     mean_iou_scores = np.zeros(epochs)
     val_accuracy = np.zeros(epochs)
-    early_stop_patience = 3
+    early_stop_patience = 5
     early_stop = True # flag to identify if early stopping is desired
 
     # number of consecutive epochs where
@@ -136,8 +138,7 @@ def train(save_location):
         iters = len(train_loader)
         train_losses = []
         for iter, (inputs, labels) in enumerate(train_loader):
-            if cosine_annealing:
-                optimizer.zero_grad()
+            optimizer.zero_grad()
             if use_class_weights:
                 criterion = nn.CrossEntropyLoss(weight=class_weights)
             else:
@@ -152,8 +153,8 @@ def train(save_location):
             train_losses.append(loss.item())
 
             loss.backward()
+            optimizer.step()
             if cosine_annealing:
-                optimizer.step()
                 scheduler.step(epoch + iter / iters)
 
             inner_pbar.update(train_loader.batch_size)
@@ -251,8 +252,16 @@ if __name__ == "__main__":
         os.mkdir(path)
     save_location = path + '/' + model_identifier
     val(0)  # show the accuracy before training
+    # timekeeping
+    start = time.time()
+
     train(save_location)
     modelTest(save_location)
+
+    end = time.time()
+
+    time_elapsed_ms = end - start
+    print(f'Time elapsed:\t{time_elapsed_ms} seconds')
 
     # housekeeping
     gc.collect()
