@@ -94,7 +94,7 @@ device = torch.device(device)
 
 optimizer = torch.optim.Adam(fcn_model.parameters(), lr=0.001)
 if cosine_annealing:
-    scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=2, T_mult=1)
+    scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=1)
 weights = train_dataset.get_class_weights()
 if use_class_weights:
     class_weights = torch.FloatTensor(weights)
