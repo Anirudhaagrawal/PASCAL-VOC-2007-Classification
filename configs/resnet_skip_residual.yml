@@ -1,0 +1,20 @@
+# randomly transform training patterns
+random_transforms: True
+
+# Cosine annealing learning rate
+# scheduler
+cosine_annealing: True
+
+# apply fix for class imbalance with
+# custom class weights
+class_imbalance_fix: True
+epochs: 50
+batch_size: 32
+
+# "unet", "resnet", "fcn", or "new_arch"
+model_type: resnet_skip_residual
+
+freeze_encoder: True
+
+# model identifier for save location of best model, figures and data
+model_identifier: resnet_skip_residual

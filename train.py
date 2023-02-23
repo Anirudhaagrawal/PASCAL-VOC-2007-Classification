@@ -17,7 +17,7 @@ from resnet50 import *
 from resnet_2model_skip_res_cat import *
 from unet import *
 from resnet_leaky_relu import *
-
+from resnet_skip_residual import *
 
 class MaskToTensor(object):
     def __call__(self, img):
@@ -36,7 +36,7 @@ def init_weights_transfer_learning(m):
         torch.nn.init.normal_(m.bias.data)  # xavier not applicable for biases
 
 
-config = yaml.load(open('configs/config_resnet_2_model_skip_cat.yml', 'r'), Loader=yaml.SafeLoader)
+config = yaml.load(open('configs/resnet_skip_residual.yml', 'r'), Loader=yaml.SafeLoader)
 
 cosine_annealing = config['cosine_annealing']
 random_transforms = config['random_transforms']
@@ -87,6 +87,9 @@ elif model_type.lower() == "resnet_leaky":
     fcn_model.apply(init_weights_transfer_learning)
 elif model_type.lower() == "resnet_2model_skip_res_cat":
     fcn_model = Resnet2ModelSkipResCat(n_class=n_class, freeze_encoder=freeze_encoder)
+    fcn_model.apply(init_weights_transfer_learning)
+elif model_type.lower() == "resnet_skip_residual":
+    fcn_model = Resnet_Skip_Residual(n_class=n_class, freeze_encoder=freeze_encoder)
     fcn_model.apply(init_weights_transfer_learning)
 else:
     fcn_model = FCN(n_class=n_class)
