@@ -14,6 +14,7 @@ from basic_fcn import *
 from new_arch import *
 from resnet import *
 from resnet50 import *
+from resnet_2model_skip_res_cat import *
 from unet import *
 from resnet_leaky_relu import *
 
@@ -35,7 +36,7 @@ def init_weights_transfer_learning(m):
         torch.nn.init.normal_(m.bias.data)  # xavier not applicable for biases
 
 
-config = yaml.load(open('configs/config3.yml', 'r'), Loader=yaml.SafeLoader)
+config = yaml.load(open('configs/config_resnet_2_model_skip_cat.yml', 'r'), Loader=yaml.SafeLoader)
 
 cosine_annealing = config['cosine_annealing']
 random_transforms = config['random_transforms']
@@ -84,6 +85,9 @@ elif model_type.lower() == "resnet50":
 elif model_type.lower() == "resnet_leaky":
     fcn_model = ResnetLeaky(n_class=n_class, freeze_encoder=freeze_encoder)
     fcn_model.apply(init_weights_transfer_learning)
+elif model_type.lower() == "resnet_2model_skip_res_cat":
+    fcn_model = Resnet2ModelSkipResCat(n_class=n_class, freeze_encoder=freeze_encoder)
+    fcn_model.apply(init_weights_transfer_learning)
 else:
     fcn_model = FCN(n_class=n_class)
     fcn_model.apply(init_weights)
@@ -94,7 +98,7 @@ device = torch.device(device)
 
 optimizer = torch.optim.Adam(fcn_model.parameters(), lr=0.001)
 if cosine_annealing:
-    scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=1)
+    scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=20, T_mult=1)
 weights = train_dataset.get_class_weights()
 if use_class_weights:
     class_weights = torch.FloatTensor(weights)
