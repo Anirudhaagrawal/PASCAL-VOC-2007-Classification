@@ -249,7 +249,7 @@ def modelTest(save_location, test_loader, device, criterion, class_weights):
     # fcn_model.eval()  # Put in eval mode (disables batchnorm/dropout) !
     i = 0
     with torch.no_grad():  # we don't need to calculate the gradient in the validation/testing
-        test_size = len(test_loader.dataset, class_weights)
+        test_size = len(test_loader.dataset)
         val_pbar = tqdm(total=test_size, desc=f'Testing', position=0, leave=True)
         for iter, (input, label) in enumerate(test_loader):
             input = input.to(device)
