@@ -176,7 +176,7 @@ def train(save_location, fcn_model, optimizer, scheduler, criterion, train_loade
         train_loss[epoch] = np.mean(train_losses)
         inner_pbar.close()
 
-        current_miou_score, current_accuracy, current_val_loss = val(epoch, fcn_model, criterion, val_loader, device)
+        current_miou_score, current_accuracy, current_val_loss = val(epoch, fcn_model, criterion, val_loader, device, class_weights)
         val_loss[epoch] = current_val_loss
         mean_iou_scores[epoch] = current_miou_score
         val_accuracy[epoch] = current_accuracy
@@ -202,7 +202,7 @@ def train(save_location, fcn_model, optimizer, scheduler, criterion, train_loade
     util.plots(train_loss, val_loss, val_accuracy, mean_iou_scores, earlyStop, saveLocation=save_location)
 
 
-def val(epoch, fcn_model, criterion, val_loader, device):
+def val(epoch, fcn_model, criterion, val_loader, device, class_weights):
     fcn_model.eval()  # Put in eval mode (disables batchnorm/dropout) !
 
     losses = []
@@ -214,8 +214,13 @@ def val(epoch, fcn_model, criterion, val_loader, device):
         for iter, (input, label) in enumerate(val_loader):
             input = input.to(device)
             output = fcn_model.forward(input)
-
+            label = label.to('cpu')
             output = output.to('cpu')
+
+            if use_class_weights:
+                criterion = nn.CrossEntropyLoss(weight=class_weights.to('cpu'))
+            else:
+                criterion = nn.CrossEntropyLoss()
             loss = criterion(output, label)
             losses.append(loss.item())
 
@@ -234,7 +239,7 @@ def val(epoch, fcn_model, criterion, val_loader, device):
     return np.mean(mean_iou_scores), np.mean(accuracy), np.mean(losses)
 
 
-def modelTest(save_location, test_loader, device, criterion):
+def modelTest(save_location, test_loader, device, criterion, class_weights):
     path = save_location + 'model.pt'
     model = torch.load(path)
     model.eval()
@@ -244,13 +249,17 @@ def modelTest(save_location, test_loader, device, criterion):
     # fcn_model.eval()  # Put in eval mode (disables batchnorm/dropout) !
     i = 0
     with torch.no_grad():  # we don't need to calculate the gradient in the validation/testing
-        test_size = len(test_loader.dataset)
+        test_size = len(test_loader.dataset, class_weights)
         val_pbar = tqdm(total=test_size, desc=f'Testing', position=0, leave=True)
         for iter, (input, label) in enumerate(test_loader):
             input = input.to(device)
             output = model.forward(input)
 
             output = output.to('cpu')
+            if use_class_weights:
+                criterion = nn.CrossEntropyLoss(weight=class_weights.to('cpu'))
+            else:
+                criterion = nn.CrossEntropyLoss()
             loss = criterion(output, label)
             losses.append(loss.item())
             pred = output.argmax(dim=1)
@@ -283,12 +292,12 @@ if __name__ == "__main__":
     if not os.path.exists(path):
         os.mkdir(path)
     save_location = path + '/' + model_identifier
-    val(0, fcn_model, criterion, val_loader, device)  # show the accuracy before training
+    val(0, fcn_model, criterion, val_loader, device, class_weights)  # show the accuracy before training
     # timekeeping
     start = time.time()
 
     train(save_location, fcn_model, optimizer, scheduler, criterion, train_loader, val_loader, test_loader, device, epochs, model_identifier, class_weights)
-    modelTest(save_location, test_loader, device, criterion)
+    modelTest(save_location, test_loader, device, criterion, class_weights)
 
     end = time.time()
 
