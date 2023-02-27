@@ -32,3 +32,7 @@ Configuration files come in the following format:
 |freeze_encoder|boolean|Freeze the encoding layers of the network|
 |model_type|string|Specify the model type: "unet", "resnet", "fcn", or "new_arch"|
 |model_identifier|string|Identifier for save location of model-specific run data|
+
+
+Please have a look at the report of all of our results.
+[CSE_251B_Project_3.pdf](https://github.com/Anirudhaagrawal/PASCAL-VOC-2007-Classification/files/10836679/CSE_251B_Project_3.pdf)
